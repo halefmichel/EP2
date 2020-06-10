@@ -4,6 +4,7 @@ import math
 import matplotlib.pyplot as plt
 import numpy as np
 
+
 def main():
     # Definindo variáveis
     T = 1
@@ -11,10 +12,12 @@ def main():
     delta_x = 1.0 / linha
     delta_t = delta_x
     lambida = linha
-    nf=int(input('Digite a quantidade de pontos p: '))
-    lista_p=np.zeros(nf)
-    for i in range (nf):
-        lista_p[i]=float(input('Digite o valor de p:'))
+    nf = int(input('Digite a quantidade de pontos p: '))
+    lista_p = np.zeros(nf)
+    for i in range(nf):
+        lista_p[i] = float(input('Digite o valor de p:'))
+
+    # Matriz A dos coeficientes do método de Crank-Nicolson
     A = np.zeros((linha - 1, linha - 1))
     A[0][0] = 1 + 2 * lambida
     A[0][1] = -lambida
@@ -25,8 +28,12 @@ def main():
     A[linha - 2][linha - 3] = -lambida
     A[linha - 2][linha - 2] = 1 + 2 * lambida
 
-    Crank(delta_t, linha, lambida, nf, lista_p)
+    # Chamada das funções
+    lista_u = Crank(delta_t, linha, lambida, nf, lista_p)
+    uT(nf, lista_u, linha)
 
+
+# Função que reseta os valores da matriz u e das listas x e t
 def reset(linha, delta_x, delta_t, coluna):
     # matriz de zeros
     u = np.zeros((linha + 1, coluna + 1))
@@ -43,8 +50,9 @@ def reset(linha, delta_x, delta_t, coluna):
 
     return u, x, t
 
-# Função P2a: função que recebe dois vetores que compoem A e retorna um vetor L e outro D
-# A matriz A foi gerada na função chamada_funcao
+
+# Função P2a: função que recebe dois vetores que compõem A e retorna um vetor L e outro D
+# A matriz A foi junto com as variáveis
 def P2a(diagonal_A, subdiagonal_A):
     linha = len(diagonal_A) + 1
 
@@ -61,6 +69,7 @@ def P2a(diagonal_A, subdiagonal_A):
         L[i] = subdiagonal_A[i] / D[i]
 
     return L, D
+
 
 # Função solve: resolve o sistema linear usando o método LDLt
 def solve(b, L, D, linha):
@@ -79,6 +88,7 @@ def solve(b, L, D, linha):
 
     return solucao
 
+
 # Matriz A2
 # Matriz tridiagonal simétrica usada no método de Crank-Nicolson na parte 2 do EP
 def chama_A2(linha, lambida):
@@ -95,26 +105,28 @@ def chama_A2(linha, lambida):
 
     return P2a(np.array(A2.diagonal()), np.array(A2.diagonal(-1)))
 
-# Função P2CNc: refaz o item "c" da parte 1 utilizando o método de Crank-Nicolson
+
+# Função Crank gera os vetores uk para cada ponto p, utilizando o método de Crank-Nicolson
 def Crank(delta_t, linha, lambida, nf, lista_p):
     h = delta_t
-    lista_u=np.zeros((linha-1, nf))
-    for pontos in range (nf):
+    lista_u = np.zeros((linha - 1, nf))
+    for pontos in range(nf):
         u, x, t = reset(linha, delta_t, delta_t, linha)
-        p=lista_p[pontos]
+        p = lista_p[pontos]
         funcao = np.zeros((linha + 1, linha + 1))
         for tempo in range(linha + 1):
             for posicao in range(1, linha):
-                if p - (h/2) <= x[posicao] <= p + (h/2):
+                if p - (h / 2) <= x[posicao] <= p + (h / 2):
                     g = (1 / h)
-                    funcao[posicao][tempo] = 10*(1+math.cos(5*t[tempo]))*g
+                    funcao[posicao][tempo] = 10 * (1 + math.cos(5 * t[tempo])) * g
                 else:
                     funcao[posicao][tempo] = 0
 
         # Gerando o vetor "b" de partida
         b = np.zeros(linha - 1)
         for posicao in range(linha - 1):
-            b[posicao] = u[posicao + 1][0] + (delta_t / 2) * (funcao[posicao + 1][0] + funcao[posicao + 1][1]) + (lambida / 2) * (u[posicao][0] - 2 * u[posicao + 1][0] + u[posicao + 2][0])
+            b[posicao] = u[posicao + 1][0] + (delta_t / 2) * (funcao[posicao + 1][0] + funcao[posicao + 1][1]) + (
+                    lambida / 2) * (u[posicao][0] - 2 * u[posicao + 1][0] + u[posicao + 2][0])
 
         # Definindo os vetores provenientes da função "chama_A2"
         L, D = chama_A2(linha, lambida)
@@ -125,12 +137,25 @@ def Crank(delta_t, linha, lambida, nf, lista_p):
             solucao = solve(b, L, D, linha)
             u[1:linha, tempo] = solucao
             for posicao in range(linha - 1):
-                b[posicao] = solucao[posicao] + (delta_t / 2) * (funcao[posicao + 1][tempo] + funcao[posicao + 1][tempo + 1]) + (lambida / 2) * (u[posicao][tempo] - 2 * u[posicao + 1][tempo] + u[posicao + 2][tempo])
+                b[posicao] = solucao[posicao] + (delta_t / 2) * (
+                        funcao[posicao + 1][tempo] + funcao[posicao + 1][tempo + 1]) + (lambida / 2) * (
+                                     u[posicao][tempo] - 2 * u[posicao + 1][tempo] + u[posicao + 2][tempo])
         solucao = solve(b, L, D, linha)
         u[1:linha, linha] = solucao
-        lista_u[:,pontos]=u[1:linha, linha]
+        lista_u[:, pontos] = u[1:linha, linha]
 
-    print(lista_u)
+    return lista_u
 
-main()
 
+def uT(nf, lista_u, linha):
+    lista_coef = np.zeros(nf)
+    u_T = np.zeros(linha - 1)
+
+    for i in range(nf):
+        lista_coef[i] = float(input('Digite o valor do coeficiente: '))
+
+    for i in range(linha - 1):
+        for j in range(nf):
+            u_T[i] += lista_coef[j] * lista_u[i, j]
+
+    return u_T
