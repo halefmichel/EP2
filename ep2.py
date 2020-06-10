@@ -25,7 +25,7 @@ def main():
     A[linha - 2][linha - 3] = -lambida
     A[linha - 2][linha - 2] = 1 + 2 * lambida
 
-    P2CNc(delta_t, linha, lambida, nf, lista_p)
+    Crank(delta_t, linha, lambida, nf, lista_p)
 
 def reset(linha, delta_x, delta_t, coluna):
     # matriz de zeros
@@ -96,7 +96,7 @@ def chama_A2(linha, lambida):
     return P2a(np.array(A2.diagonal()), np.array(A2.diagonal(-1)))
 
 # Função P2CNc: refaz o item "c" da parte 1 utilizando o método de Crank-Nicolson
-def P2CNc(delta_t, linha, lambida, nf, lista_p):
+def Crank(delta_t, linha, lambida, nf, lista_p):
     h = delta_t
     lista_u=np.zeros((linha-1, nf))
     for pontos in range (nf):
