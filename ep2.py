@@ -8,15 +8,31 @@ import numpy as np
 def main():
     # Definindo variáveis
     T = 1
-    linha = int(input('Digite o valor de N: '))
+    teste = str(input('Digite qual teste você quer rodar: '))
+    nf = 0
+    lista_p = []
+    lista_coef = []
+    linha = 128
+
+    if teste.lower() == 'a':
+        lista_p = np.array([0.35])
+        nf = 1
+        lista_coef = np.array([7])
+
+    elif teste.lower() == 'b':
+        lista_p = np.array([0.15, 0.3, 0.7, 0.8])
+        nf = 4
+        lista_coef = np.array([2.3, 3.7, 0.3, 4.2])
+
+    elif teste.lower() == 'c':
+        linha = int(input('Digite o valor de N: '))
+
+    elif teste.lower() == 'd':
+        linha = int(input('Digite o valor de N: '))
+
     delta_x = 1.0 / linha
     delta_t = delta_x
     lambida = linha
-    nf = int(input('Digite a quantidade de pontos p: '))
-    lista_p = np.zeros(nf)
-    for i in range(nf):
-        str = 'Digite o valor do coeficiente de p%d: ' % (i + 1)
-        lista_p[i] = float(input(str))
 
     # Matriz A dos coeficientes do método de Crank-Nicolson
     A = np.zeros((linha - 1, linha - 1))
@@ -31,7 +47,7 @@ def main():
 
     # Chamada das funções
     matriz_u = Crank(delta_t, linha, lambida, nf, lista_p)
-    uT(nf, matriz_u, linha)
+    uT(nf, matriz_u, linha, lista_coef)
     Prod_Escalar(nf, matriz_u)
 
 
@@ -149,13 +165,8 @@ def Crank(delta_t, linha, lambida, nf, lista_p):
     return matiz_u
 
 
-def uT(nf, matriz_u, linha):
-    lista_coef = np.zeros(nf)
+def uT(nf, matriz_u, linha, lista_coef):
     u_T = np.zeros(linha - 1)
-
-    for i in range(nf):
-        str = 'Digite o valor do coeficiente de u%d: ' % (i + 1)
-        lista_coef[i] = float(input(str))
 
     for i in range(linha - 1):
         for j in range(nf):
@@ -176,6 +187,8 @@ def Prod_Escalar(nf, matriz_u):
                 P[j, i] = P[i, j]
 
         b[j] = np.dot(matriz_u[:, -1], matriz_u[:, j])
+
+    print(matriz_u)
 
 
 main()
