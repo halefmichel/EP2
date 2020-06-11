@@ -15,7 +15,8 @@ def main():
     nf = int(input('Digite a quantidade de pontos p: '))
     lista_p = np.zeros(nf)
     for i in range(nf):
-        lista_p[i] = float(input('Digite o valor de p:'))
+        str = 'Digite o valor do coeficiente de p%d: ' % (i + 1)
+        lista_p[i] = float(input(str))
 
     # Matriz A dos coeficientes do método de Crank-Nicolson
     A = np.zeros((linha - 1, linha - 1))
@@ -29,8 +30,9 @@ def main():
     A[linha - 2][linha - 2] = 1 + 2 * lambida
 
     # Chamada das funções
-    lista_u = Crank(delta_t, linha, lambida, nf, lista_p)
-    uT(nf, lista_u, linha)
+    matriz_u = Crank(delta_t, linha, lambida, nf, lista_p)
+    uT(nf, matriz_u, linha)
+    Prod_Escalar(nf, matriz_u)
 
 
 # Função que reseta os valores da matriz u e das listas x e t
@@ -109,7 +111,7 @@ def chama_A2(linha, lambida):
 # Função Crank gera os vetores uk para cada ponto p, utilizando o método de Crank-Nicolson
 def Crank(delta_t, linha, lambida, nf, lista_p):
     h = delta_t
-    lista_u = np.zeros((linha - 1, nf))
+    matiz_u = np.zeros((linha - 1, nf))
     for pontos in range(nf):
         u, x, t = reset(linha, delta_t, delta_t, linha)
         p = lista_p[pontos]
@@ -142,20 +144,38 @@ def Crank(delta_t, linha, lambida, nf, lista_p):
                                      u[posicao][tempo] - 2 * u[posicao + 1][tempo] + u[posicao + 2][tempo])
         solucao = solve(b, L, D, linha)
         u[1:linha, linha] = solucao
-        lista_u[:, pontos] = u[1:linha, linha]
+        matiz_u[:, pontos] = u[1:linha, linha]
 
-    return lista_u
+    return matiz_u
 
 
-def uT(nf, lista_u, linha):
+def uT(nf, matriz_u, linha):
     lista_coef = np.zeros(nf)
     u_T = np.zeros(linha - 1)
 
     for i in range(nf):
-        lista_coef[i] = float(input('Digite o valor do coeficiente: '))
+        str = 'Digite o valor do coeficiente de u%d: ' % (i + 1)
+        lista_coef[i] = float(input(str))
 
     for i in range(linha - 1):
         for j in range(nf):
-            u_T[i] += lista_coef[j] * lista_u[i, j]
+            u_T[i] += lista_coef[j] * matriz_u[i, j]
 
     return u_T
+
+
+def Prod_Escalar(nf, matriz_u):
+    # Gerando a matriz dos coeficientes
+    P = np.zeros((nf, nf))
+    b = np.zeros(nf)
+    # Montando a matriz dos produtos internos dos coeficientes do sistema
+    for j in range(nf):
+        for i in range(j, nf):
+            P[i, j] = np.dot(matriz_u[:, i], matriz_u[:, j])
+            if i != j:
+                P[j, i] = P[i, j]
+
+        b[j] = np.dot(matriz_u[:, -1], matriz_u[:, j])
+
+
+main()
