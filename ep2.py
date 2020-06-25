@@ -47,8 +47,8 @@ def main():
 
     # Chamada das funções
     matriz_u = Crank(delta_t, linha, lambida, nf, lista_p)
-    uT(nf, matriz_u, linha, lista_coef)
-    b, P = Prod_Escalar(nf, matriz_u)
+    u_T = uT(nf, matriz_u, linha, lista_coef)
+    b, P = Prod_Escalar(nf, matriz_u, u_T)
     solve2(P, nf + 1, b)
 
 
@@ -176,7 +176,7 @@ def uT(nf, matriz_u, linha, lista_coef):
     return u_T
 
 
-def Prod_Escalar(nf, matriz_u):
+def Prod_Escalar(nf, matriz_u, u_T):
     # Gerando a matriz dos coeficientes
     P = np.zeros((nf, nf))
     b = np.zeros(nf)
@@ -188,7 +188,8 @@ def Prod_Escalar(nf, matriz_u):
             if i != j:
                 P[j, i] = P[i, j]
 
-        b[j] = np.dot(matriz_u[:, -1], matriz_u[:, j])
+        b[j] = np.dot(u_T, matriz_u[:, j])
+
 
     return b, P
 
@@ -196,7 +197,6 @@ def Prod_Escalar(nf, matriz_u):
 def LDL2(P, nf):
     M = np.copy(P)
     L = np.zeros((nf - 1, nf - 1))
-    Lt = np.zeros((nf - 1, nf - 1))
     D = np.ones(nf - 1)
 
     # Calculando L e Lt
@@ -213,16 +213,13 @@ def LDL2(P, nf):
         L[k][0:k] = M[k][0:k]
         L[k][k] = 1.0
 
-    # Transpondo a matriz L
-    Lt = np.transpose(L)
-
-    return L, D, Lt
+    return L, D
 
 
 def solve2(P, nf, b):
     x = np.zeros(nf - 1)
     y = np.zeros(nf - 1)
-    (L, D, Lt) = LDL2(P, nf)
+    (L, D) = LDL2(P, nf)
 
     # Resolvendo L * y = b
     y[0] = b[0] / L[0][0]
@@ -232,14 +229,12 @@ def solve2(P, nf, b):
             soma += L[i][j] * y[j]
         y[i] = (b[i] - soma) / L[i][i]
 
-    # Resolvendo U * x = y
-    x[nf - 2] = y[nf - 2] / Lt[nf - 2][nf - 2]
+    # Resolvendo DLt * x = y
     for i in range(nf - 2, -1, -1):
-        soma = y[i]
+        soma = 0.0
         for j in range(i + 1, nf - 1):
-            soma = soma - Lt[i][j] * x[j]
-        x[i] = soma / Lt[i][i]
-
+            soma += L[j][i] * x[j]
+        x[i] = (y[i] / D[i]) - soma
     return x
 
 
