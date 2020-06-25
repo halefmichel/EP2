@@ -13,40 +13,31 @@ def main():
     lista_p = []
     lista_coef = []
     linha = 128
+    delta_x = 1.0 / linha
+    delta_t = delta_x
+    lambida = linha
 
     if teste.lower() == 'a':
         lista_p = np.array([0.35])
         nf = 1
         lista_coef = np.array([7])
+        matriz_u = Crank(delta_t, linha, lambida, nf, lista_p)
 
     elif teste.lower() == 'b':
         lista_p = np.array([0.15, 0.3, 0.7, 0.8])
         nf = 4
         lista_coef = np.array([2.3, 3.7, 0.3, 4.2])
+        matriz_u = Crank(delta_t, linha, lambida, nf, lista_p)
 
     elif teste.lower() == 'c':
         linha = int(input('Digite o valor de N: '))
-
+        lista_coef = input()
+        matriz_u = input()
+        print(matriz_u)
     elif teste.lower() == 'd':
         linha = int(input('Digite o valor de N: '))
 
-    delta_x = 1.0 / linha
-    delta_t = delta_x
-    lambida = linha
-
-    # Matriz A dos coeficientes do método de Crank-Nicolson
-    A = np.zeros((linha - 1, linha - 1))
-    A[0][0] = 1 + 2 * lambida
-    A[0][1] = -lambida
-    for i in range(1, linha - 2):
-        A[i][i - 1] = -lambida
-        A[i][i] = 1 + 2 * lambida
-        A[i][i + 1] = -lambida
-    A[linha - 2][linha - 3] = -lambida
-    A[linha - 2][linha - 2] = 1 + 2 * lambida
-
     # Chamada das funções
-    matriz_u = Crank(delta_t, linha, lambida, nf, lista_p)
     u_T = uT(nf, matriz_u, linha, lista_coef)
     b, P = Prod_Escalar(nf, matriz_u, u_T)
     solve2(P, nf + 1, b)
@@ -190,7 +181,6 @@ def Prod_Escalar(nf, matriz_u, u_T):
 
         b[j] = np.dot(u_T, matriz_u[:, j])
 
-
     return b, P
 
 
@@ -235,6 +225,7 @@ def solve2(P, nf, b):
         for j in range(i + 1, nf - 1):
             soma += L[j][i] * x[j]
         x[i] = (y[i] / D[i]) - soma
+
     return x
 
 
