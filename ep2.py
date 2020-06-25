@@ -31,9 +31,13 @@ def main():
 
     elif teste.lower() == 'c':
         linha = int(input('Digite o valor de N: '))
-        lista_coef = input()
-        matriz_u = input()
-        print(matriz_u)
+        with open('./input.txt', 'r') as fp:
+            line = fp.readline()
+            cnt = 1
+            while line:
+                print("Line {}: {}".format(cnt, line.strip()))
+                line = fp.readline()
+                cnt += 1
     elif teste.lower() == 'd':
         linha = int(input('Digite o valor de N: '))
 
