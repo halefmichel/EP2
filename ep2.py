@@ -48,7 +48,8 @@ def main():
     # Chamada das funções
     matriz_u = Crank(delta_t, linha, lambida, nf, lista_p)
     uT(nf, matriz_u, linha, lista_coef)
-    Prod_Escalar(nf, matriz_u)
+    b = Prod_Escalar(nf, matriz_u)
+    solve2(matriz_u, linha, b)
 
 
 # Função que reseta os valores da matriz u e das listas x e t
@@ -69,9 +70,9 @@ def reset(linha, delta_x, delta_t, coluna):
     return u, x, t
 
 
-# Função P2a: função que recebe dois vetores que compõem A e retorna um vetor L e outro D
+# Função LDL1: função que recebe dois vetores que compõem A e retorna um vetor L e outro D
 # A matriz A foi junto com as variáveis
-def P2a(diagonal_A, subdiagonal_A):
+def LDL1(diagonal_A, subdiagonal_A):
     linha = len(diagonal_A) + 1
 
     # Montando o vetor D
@@ -121,7 +122,7 @@ def chama_A2(linha, lambida):
     A2[linha - 2][linha - 3] = - (lambida / 2)
     A2[linha - 2][linha - 2] = 1 + lambida
 
-    return P2a(np.array(A2.diagonal()), np.array(A2.diagonal(-1)))
+    return LDL1(np.array(A2.diagonal()), np.array(A2.diagonal(-1)))
 
 
 # Função Crank gera os vetores uk para cada ponto p, utilizando o método de Crank-Nicolson
@@ -179,6 +180,7 @@ def Prod_Escalar(nf, matriz_u):
     # Gerando a matriz dos coeficientes
     P = np.zeros((nf, nf))
     b = np.zeros(nf)
+
     # Montando a matriz dos produtos internos dos coeficientes do sistema
     for j in range(nf):
         for i in range(j, nf):
@@ -188,7 +190,57 @@ def Prod_Escalar(nf, matriz_u):
 
         b[j] = np.dot(matriz_u[:, -1], matriz_u[:, j])
 
-    print(matriz_u)
+    return b
+
+
+def LDL2(matriz_u, linha):
+    M = np.copy(matriz_u)
+    L = np.zeros((linha - 1, linha - 1))
+    Lt = np.zeros((linha - 1, linha - 1))
+    D = np.ones(linha - 1)
+
+    # Calculando L e Lt
+    for i in range(linha - 1):
+        for j in range(linha - 1):
+            soma = sum([M[i][k] * M[j][k] * D[k] for k in range(j)])
+            M[i][j] = (matriz_u[i][j] - soma) / D[j]
+
+        # Atualizando a diagonal
+        D[i] = matriz_u[i][i] - sum([M[i][k] * M[i][k] * D[k] for k in range(i)])
+
+    # L
+    for k in range(linha - 1):
+        L[k][0:k] = M[k][0:k]
+        L[k][k] = 1.0
+
+    # Transpondo a matriz L
+    Lt = np.transpose(L)
+
+    return L, D, Lt
+
+
+def solve2(matriz_u, linha, b):
+    x = np.zeros(linha - 1)
+    y = np.zeros(linha - 1)
+    (L, D, Lt) = LDL2(matriz_u, linha)
+
+    # Resolvendo L * y = b
+    y[0] = b[0] / L[0][0]
+    for i in range(1, linha - 1):
+        soma = 0.0
+        for j in range(i):
+            soma += L[i][j] * y[j]
+        y[i] = (b[i] - soma) / L[i][i]
+
+    # Resolvendo U * x = y
+    x[linha - 2] = y[linha - 2] / Lt[linha - 2][linha - 2]
+    for i in range(linha - 2, -1, -1):
+        soma = y[i]
+        for j in range(i + 1, linha - 1):
+            soma = soma - Lt[i][j] * x[j]
+        x[i] = soma / Lt[i][i]
+
+    return x
 
 
 main()
