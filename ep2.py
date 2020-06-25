@@ -48,8 +48,8 @@ def main():
     # Chamada das funções
     matriz_u = Crank(delta_t, linha, lambida, nf, lista_p)
     uT(nf, matriz_u, linha, lista_coef)
-    b = Prod_Escalar(nf, matriz_u)
-    solve2(matriz_u, linha, b)
+    b, P = Prod_Escalar(nf, matriz_u)
+    solve2(P, nf + 1, b)
 
 
 # Função que reseta os valores da matriz u e das listas x e t
@@ -190,26 +190,26 @@ def Prod_Escalar(nf, matriz_u):
 
         b[j] = np.dot(matriz_u[:, -1], matriz_u[:, j])
 
-    return b
+    return b, P
 
 
-def LDL2(matriz_u, linha):
-    M = np.copy(matriz_u)
-    L = np.zeros((linha - 1, linha - 1))
-    Lt = np.zeros((linha - 1, linha - 1))
-    D = np.ones(linha - 1)
+def LDL2(P, nf):
+    M = np.copy(P)
+    L = np.zeros((nf - 1, nf - 1))
+    Lt = np.zeros((nf - 1, nf - 1))
+    D = np.ones(nf - 1)
 
     # Calculando L e Lt
-    for i in range(linha - 1):
-        for j in range(linha - 1):
+    for i in range(nf - 1):
+        for j in range(nf - 1):
             soma = sum([M[i][k] * M[j][k] * D[k] for k in range(j)])
-            M[i][j] = (matriz_u[i][j] - soma) / D[j]
+            M[i][j] = (P[i][j] - soma) / D[j]
 
         # Atualizando a diagonal
-        D[i] = matriz_u[i][i] - sum([M[i][k] * M[i][k] * D[k] for k in range(i)])
+        D[i] = P[i][i] - sum([M[i][k] * M[i][k] * D[k] for k in range(i)])
 
     # L
-    for k in range(linha - 1):
+    for k in range(nf - 1):
         L[k][0:k] = M[k][0:k]
         L[k][k] = 1.0
 
@@ -219,24 +219,24 @@ def LDL2(matriz_u, linha):
     return L, D, Lt
 
 
-def solve2(matriz_u, linha, b):
-    x = np.zeros(linha - 1)
-    y = np.zeros(linha - 1)
-    (L, D, Lt) = LDL2(matriz_u, linha)
+def solve2(P, nf, b):
+    x = np.zeros(nf - 1)
+    y = np.zeros(nf - 1)
+    (L, D, Lt) = LDL2(P, nf)
 
     # Resolvendo L * y = b
     y[0] = b[0] / L[0][0]
-    for i in range(1, linha - 1):
+    for i in range(1, nf - 1):
         soma = 0.0
         for j in range(i):
             soma += L[i][j] * y[j]
         y[i] = (b[i] - soma) / L[i][i]
 
     # Resolvendo U * x = y
-    x[linha - 2] = y[linha - 2] / Lt[linha - 2][linha - 2]
-    for i in range(linha - 2, -1, -1):
+    x[nf - 2] = y[nf - 2] / Lt[nf - 2][nf - 2]
+    for i in range(nf - 2, -1, -1):
         soma = y[i]
-        for j in range(i + 1, linha - 1):
+        for j in range(i + 1, nf - 1):
             soma = soma - Lt[i][j] * x[j]
         x[i] = soma / Lt[i][i]
 
