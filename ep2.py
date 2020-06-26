@@ -33,6 +33,10 @@ def main():
 
     elif teste.lower() == 'c':
         linha = int(input('Digite o valor de N: '))
+        delta_x = 1.0 / linha
+        delta_t = delta_x
+        lambida = linha
+
         with open('./input.txt', 'r') as fp:
             line = fp.readline()
             lista_p = [float(elt.strip()) for elt in line.split(' ')]
@@ -45,21 +49,23 @@ def main():
 
         u_T = []
         passo = math.floor(2048 / linha)
-        nf = len(lista_p)
-        matriz_u = Crank(delta_t, linha, lambida, nf, lista_p)
-
         for i in range(0, len(aux) - 1, passo):
             if i != 0:
                 u_T.append(aux[i])
 
         u_T = np.array(u_T)
+        nf = len(lista_p)
+        matriz_u = Crank(delta_t, linha, lambida, nf, lista_p)
 
     elif teste.lower() == 'd':
         linha = int(input('Digite o valor de N: '))
+        delta_x = 1.0 / linha
+        delta_t = delta_x
+        lambida = linha
 
     # Chamada das funções
     b, P = Prod_Escalar(nf, matriz_u, u_T)
-    x = solve2(P, nf + 1, b)
+    x = solve2(P, nf, b)
     erro(linha, matriz_u, u_T, x, nf)
 
 
@@ -222,12 +228,12 @@ def Prod_Escalar(nf, matriz_u, u_T):
 
 def LDL2(P, nf):
     M = np.copy(P)
-    L = np.zeros((nf - 1, nf - 1))
-    D = np.ones(nf - 1)
+    L = np.zeros((nf, nf))
+    D = np.ones(nf)
 
     # Calculando L e Lt
-    for i in range(nf - 1):
-        for j in range(nf - 1):
+    for i in range(nf):
+        for j in range(nf):
             soma = sum([M[i][k] * M[j][k] * D[k] for k in range(j)])
             M[i][j] = (P[i][j] - soma) / D[j]
 
@@ -235,7 +241,7 @@ def LDL2(P, nf):
         D[i] = P[i][i] - sum([M[i][k] * M[i][k] * D[k] for k in range(i)])
 
     # L
-    for k in range(nf - 1):
+    for k in range(nf):
         L[k][0:k] = M[k][0:k]
         L[k][k] = 1.0
 
@@ -243,22 +249,23 @@ def LDL2(P, nf):
 
 
 def solve2(P, nf, b):
-    x = np.zeros(nf - 1)
-    y = np.zeros(nf - 1)
+    x = np.zeros(nf)
+    y = np.zeros(nf)
     (L, D) = LDL2(P, nf)
+    print(np.linalg.solve(P, b))
 
     # Resolvendo L * y = b
     y[0] = b[0] / L[0][0]
-    for i in range(1, nf - 1):
+    for i in range(1, nf):
         soma = 0.0
         for j in range(i):
             soma += L[i][j] * y[j]
         y[i] = (b[i] - soma) / L[i][i]
 
     # Resolvendo DLt * x = y
-    for i in range(nf - 2, -1, -1):
+    for i in range(nf - 1, -1, -1):
         soma = 0.0
-        for j in range(i + 1, nf - 1):
+        for j in range(i + 1, nf):
             soma += L[j][i] * x[j]
         x[i] = (y[i] / D[i]) - soma
 
