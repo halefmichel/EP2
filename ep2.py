@@ -1,7 +1,7 @@
 # Nomes: Halef Michel (10774994) e Lucas Leone (10278868)
 
 import math
-import matplotlib.pyplot as plt
+
 import numpy as np
 
 
@@ -51,13 +51,37 @@ def main():
 
         u_T = np.array(u_T)
         lista_p = np.array(lista_p)
+
     elif teste.lower() == 'd':
         linha = int(input('Digite o valor de N: '))
 
     # Chamada das funções
     u_T = uT(nf, matriz_u, linha, lista_coef)
     b, P = Prod_Escalar(nf, matriz_u, u_T)
-    solve2(P, nf + 1, b)
+    x = solve2(P, nf + 1, b)
+    erro(linha, matriz_u, u_T, x, nf)
+
+
+def erro(linha, matriz_u, u_T, b, nf):
+    soma_2 = np.zeros(linha - 1)
+    soma_3 = 0
+    delta_x = 1 / linha
+    for j in range(nf):
+        soma = 0
+        a = b[j]
+        for i in range(linha):
+            matriz_u[i][j] = a * matriz_u[i][j]
+            soma += matriz_u[i][j]
+        soma_2[j] = soma
+
+    sub = np.zeros(linha - 1)
+    for i in range(linha - 1):
+        sub[i] = u_T[i] - soma_2[i]
+        sub[i] *= sub[i]
+        soma_3 += sub[i]
+
+    x = soma_3 * delta_x
+    print(math.sqrt(x))
 
 
 # Função que reseta os valores da matriz u e das listas x e t
