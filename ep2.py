@@ -3,6 +3,7 @@
 import math
 import numpy as np
 import random
+import matplotlib.pyplot as plt
 
 
 def main():
@@ -118,6 +119,7 @@ def main():
     b, P = Prod_Escalar(nf, matriz_u, u_T)
     x = solve2(P, nf, b)
     erro(linha, matriz_u, u_T, x, nf)
+    grafico(u_T, linha, nf, matriz_u, delta_x)
 
 
 # FUNÇÃO QUE CALCULA O ERRO QUADRÁTICO
@@ -131,13 +133,14 @@ def erro(linha, matriz_u, u_T, x, nf):
             matriz_u[i][j] = matriz_u[i][j] * x[j]
 
     # difernça entre pos valores dos arquivos .txt para u_T e os valores encontrados, seguindo a teoria MMQ
+    encontrado = np.zeros(len(u_T))
     for i in range(linha - 1):
         soma = 0
         for j in range(nf):
             soma += matriz_u[i][j]
         soma_2 += (u_T[i] - soma) ** 2
 
-    # prints dos valores das fontes encontradas e do valor do erro quadrático
+    # prints das intensidade das fontes encontradas e do valor do erro quadrático
     print()
     print("Para o N = %.f as fontes de calor encontradas foram:" % linha)
     for i in range(nf):
@@ -343,5 +346,27 @@ def solve2(P, nf, b):
         x[i] = (y[i] / D[i]) - soma
 
     return x
+
+
+def grafico(u_T, linha, nf, matriz_u, delta_x):
+
+    encontrado = np.zeros(len(u_T))
+    for i in range(linha - 1):
+        soma = 0
+        for j in range(nf):
+            soma += matriz_u[i][j]
+        encontrado[i] = soma
+
+    eixo_x = np.zeros(linha - 1)
+    for i in range(linha - 1):
+        eixo_x[i] = i * delta_x
+
+    plt.plot(eixo_x, encontrado, label="u_T encontrado")
+    plt.plot(eixo_x, u_T, "k--", label="u_T exato", color="orange")
+    plt.legend(fontsize="small")
+    plt.xlabel("Posição da fonte de calor")
+    plt.ylabel("Temperaturas das fontes de calor")
+    plt.show()
+
 
 main()
