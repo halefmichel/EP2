@@ -33,11 +33,24 @@ def main():
         linha = int(input('Digite o valor de N: '))
         with open('./input.txt', 'r') as fp:
             line = fp.readline()
-            cnt = 1
+            lista_p = [float(elt.strip()) for elt in line.split(' ')]
+            aux = []
             while line:
-                print("Line {}: {}".format(cnt, line.strip()))
-                line = fp.readline()
-                cnt += 1
+                # print("Line {}: {}".format(cnt, line.strip()))
+                line = fp.readline().lstrip()
+                if line.strip() != '':
+                    aux.append(float(line.strip()))
+
+        u_T = []
+        passo = math.floor(2048 / linha)
+        matriz_u = Crank(delta_t, linha, lambida, nf, lista_p)
+
+        for i in range(0, len(aux) - 1, passo):
+            if i != 0:
+                u_T.append(aux[i])
+
+        u_T = np.array(u_T)
+        lista_p = np.array(lista_p)
     elif teste.lower() == 'd':
         linha = int(input('Digite o valor de N: '))
 
